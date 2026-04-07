@@ -108,17 +108,20 @@ function initializeSchema() {
   ];
   newPlatforms.forEach(([name, slug, method, url, color, bg]) =>
     upsertPlat.run(name, slug, method, url, color, bg));
+
+  // Migration: remove Wenxin (文心一言) from existing databases
+  database.prepare("DELETE FROM prompt_platforms WHERE platform_id IN (SELECT id FROM platforms WHERE slug = 'wenxin')").run();
+  database.prepare("DELETE FROM platforms WHERE slug = 'wenxin'").run();
 }
 
 function seedData(database: Database.Database) {
   const insertCat = database.prepare('INSERT INTO categories (name, emoji, icon, sort_order) VALUES (?, ?, ?, ?)');
   const cats: [string, string, string, number][] = [
-    ['文案类', '✍️', 'edit',       1],
-    ['分析类', '📊', 'chart',      2],
-    ['翻译类', '🌐', 'globe',      3],
-    ['编程类', '💻', 'code',       4],
-    ['营销类', '📣', 'speaker',    5],
-    ['客服类', '🎧', 'headphones', 6],
+    ['Shopify',  '🛍️', 'box',        1],
+    ['SEO',      '📊', 'chart',      2],
+    ['EDM',      '✉️', 'edit',       3],
+    ['编程',     '💻', 'code',       4],
+    ['客服咨询', '🎧', 'headphones', 5],
   ];
   cats.forEach(([name, emoji, icon, order]) => insertCat.run(name, emoji, icon, order));
 

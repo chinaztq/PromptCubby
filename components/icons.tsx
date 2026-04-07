@@ -243,12 +243,12 @@ export function getPlatformLogo(slug: string): React.ComponentType<LP> | null {
 
 /** Available icon options for the category create/edit UI */
 export const ICON_OPTIONS: { value: string; label: string }[] = [
-  { value: 'edit',       label: '文案' },
-  { value: 'chart',      label: '分析' },
-  { value: 'globe',      label: '翻译' },
+  { value: 'box',        label: 'Shopify' },
+  { value: 'chart',      label: 'SEO' },
+  { value: 'edit',       label: 'EDM' },
   { value: 'code',       label: '编程' },
-  { value: 'speaker',    label: '营销' },
-  { value: 'headphones', label: '客服' },
-  { value: 'file',       label: '通用' },
-  { value: 'box',        label: '其他' },
+  { value: 'headphones', label: '客服咨询' },
+  { value: 'globe',      label: '其他' },
+  { value: 'speaker',    label: '通用' },
+  { value: 'file',       label: '文件' },
 ];

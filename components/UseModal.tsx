@@ -226,7 +226,7 @@ export default function UseModal({ prompt, onClose }: Props) {
                       <div key={v.id} className="flex flex-col gap-1.5">
                         <div className="flex items-center gap-1.5">
                           <span className="text-[12.5px] font-semibold" style={{ color: "var(--text-primary)" }}>{v.name}</span>
-                          {v.required && <span className="text-[10px]" style={{ color: "var(--red)" }}>必填</span>}
+                          {!!v.required && <span className="text-[10px]" style={{ color: "var(--red)" }}>必填</span>}
                         </div>
                         {v.hint && <p className="text-[11px]" style={{ color: "var(--text-tertiary)" }}>{v.hint}</p>}
                         {renderInput(v)}

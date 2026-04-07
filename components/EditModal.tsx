@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Prompt, Platform, Variable, Category } from "@/types";
-import { IconX, IconCheck, IconToggleOn, IconToggleOff, getCategoryIcon, IconChevronDown } from "./icons";
+import { IconX, IconCheck, getCategoryIcon, IconChevronDown, getPlatformLogo } from "./icons";
 
 interface Props {
   prompt?: Prompt & { platforms: Platform[]; variables: Variable[] } | null;
@@ -30,10 +31,10 @@ function extractVars(content: string): string[] {
 
 interface VarRow { name: string; hint: string; type: string; options: string; default_value: string; required: boolean; }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
+function Card({ title, children, overflowVisible }: { title: string; children: React.ReactNode; overflowVisible?: boolean }) {
   return (
-    <div className="rounded-xl overflow-hidden" style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}>
-      <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--border)", background: "var(--surface-2)" }}>
+    <div className={`rounded-xl ${overflowVisible ? "" : "overflow-hidden"}`} style={{ background: "var(--surface-1)", border: "1px solid var(--border)" }}>
+      <div className="px-4 py-3 rounded-t-xl" style={{ borderBottom: "1px solid var(--border)", background: "var(--surface-2)" }}>
         <span className="text-[12px] font-semibold" style={{ color: "var(--text-primary)" }}>{title}</span>
       </div>
       <div className="p-4">{children}</div>
@@ -57,7 +58,9 @@ export default function EditModal({ prompt, categories, allPlatforms, onClose, o
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
+  const [catRect, setCatRect] = useState<DOMRect | null>(null);
   const catRef = useRef<HTMLDivElement>(null);
+  const catBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const names = extractVars(content);
@@ -218,7 +221,7 @@ export default function EditModal({ prompt, categories, allPlatforms, onClose, o
                     <div
                       className="grid gap-2 px-3 py-2 text-[10.5px] font-semibold uppercase tracking-wide"
                       style={{
-                        gridTemplateColumns: "96px 1fr 106px 92px 48px",
+                        gridTemplateColumns: "96px 1fr 106px 92px 64px",
                         background: "var(--surface-2)",
                         borderBottom: "1px solid var(--border)",
                         color: "var(--text-tertiary)",
@@ -232,7 +235,7 @@ export default function EditModal({ prompt, categories, allPlatforms, onClose, o
                         key={v.name}
                         className="grid gap-2 px-3 py-2.5 items-center"
                         style={{
-                          gridTemplateColumns: "96px 1fr 106px 92px 48px",
+                          gridTemplateColumns: "96px 1fr 106px 92px 64px",
                           borderBottom: i < varRows.length - 1 ? "1px solid var(--border)" : "none",
                         }}
                       >
@@ -266,11 +269,16 @@ export default function EditModal({ prompt, categories, allPlatforms, onClose, o
                         />
                         <button
                           onClick={() => updateVar(i, "required", !v.required)}
-                          className="flex items-center justify-center cursor-pointer transition-colors"
-                          style={{ color: v.required ? "var(--text-primary)" : "var(--border-strong)" }}
-                          title={v.required ? "必填（点击切换）" : "选填（点击切换）"}
+                          className="flex items-center justify-center w-full rounded-md text-[11px] font-semibold cursor-pointer transition-all"
+                          style={{
+                            height: 28,
+                            border: v.required ? "1.5px solid var(--red)" : "1.5px solid var(--border-strong)",
+                            background: v.required ? "rgba(220,38,38,0.08)" : "transparent",
+                            color: v.required ? "var(--red)" : "var(--text-tertiary)",
+                          }}
+                          title="点击切换必填 / 选填"
                         >
-                          {v.required ? <IconToggleOn size={20} /> : <IconToggleOff size={20} />}
+                          {v.required ? "必填" : "选填"}
                         </button>
                       </div>
                     ))}
@@ -283,21 +291,30 @@ export default function EditModal({ prompt, categories, allPlatforms, onClose, o
             <div className="flex flex-col gap-4" style={{ width: 224, flexShrink: 0 }}>
 
               {/* 分类 */}
-              <Card title="分类">
+              <Card title="分类" overflowVisible>
                 <div ref={catRef} className="relative">
                   <button
                     type="button"
-                    onClick={() => setCatOpen(v => !v)}
+                    ref={catBtnRef}
+                    onClick={() => {
+                      if (catBtnRef.current) setCatRect(catBtnRef.current.getBoundingClientRect());
+                      setCatOpen(v => !v);
+                    }}
                     className={`input-base w-full flex items-center gap-2 text-left cursor-pointer${errors.category ? " error" : ""}`}
                   >
                     {(() => { const cat = categories.find(c => c.id === categoryId); if (!cat) return null; const I = getCategoryIcon(cat.icon); return <I size={13} sw={1.6} />; })()}
                     <span className="flex-1 text-[13px]">{categories.find(c => c.id === categoryId)?.name ?? "请选择分类"}</span>
                     <IconChevronDown size={12} sw={2} />
                   </button>
-                  {catOpen && (
+                  {catOpen && catRect && typeof document !== "undefined" && createPortal(
                     <div
-                      className="absolute z-50 w-full mt-1 rounded-lg overflow-hidden py-1"
+                      className="rounded-lg overflow-hidden py-1"
                       style={{
+                        position: "fixed",
+                        top: catRect.bottom + 4,
+                        left: catRect.left,
+                        width: catRect.width,
+                        zIndex: 99999,
                         background: "var(--surface-1)",
                         border: "1px solid var(--border)",
                         boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
@@ -325,7 +342,8 @@ export default function EditModal({ prompt, categories, allPlatforms, onClose, o
                           </button>
                         );
                       })}
-                    </div>
+                    </div>,
+                    document.body
                   )}
                 </div>
                 {errors.category && <p className="text-[11px] mt-1.5" style={{ color: "var(--red)" }}>{errors.category}</p>}
@@ -349,8 +367,9 @@ export default function EditModal({ prompt, categories, allPlatforms, onClose, o
                         onMouseEnter={e => { if (!on) e.currentTarget.style.background = "var(--surface-2)"; }}
                         onMouseLeave={e => { if (!on) e.currentTarget.style.background = "var(--surface-1)"; }}
                       >
+                        {(() => { const Logo = getPlatformLogo(p.slug); return Logo ? <Logo size={15} /> : null; })()}
+                        <span className="flex-1">{p.name}</span>
                         {on && <IconCheck size={12} sw={2.5} />}
-                        {p.name}
                       </button>
                     );
                   })}
