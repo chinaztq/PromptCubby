@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PromptCubby · 页面规划与设计文档</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  /* ═══════════════════════════════════════════
+     PromptCubby · Design system inspired by claude.com/solutions/agents
+     Clean blue palette, bold type, card-based layout
+     ═══════════════════════════════════════════ */
+  :root {
+    --bg:           #f7f9fd;
+    --bg-2:         #ffffff;
+    --bg-3:         #f0f4fc;
+    --bg-4:         #e8eef8;
+    --border:       #d0ddf0;
+    --border-hover: #a8c0e8;
+    --gold:         #1e6ec8;
+    --gold-dim:     rgba(30,110,200,.08);
+    --gold-border:  rgba(30,110,200,.25);
+    --text:         #1a1e2e;
+    --text-muted:   #4a5278;
+    --text-dim:     #8090b0;
+    --sidebar-w:    264px;
+    --radius:       12px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Noto Sans SC', 'Inter', sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.75;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    position: fixed; top: 0; left: 0; bottom: 0;
+    background: #1e6ec8;
+    border-right: none;
+    overflow-y: auto;
+    z-index: 100;
+    display: flex; flex-direction: column;
+    transition: transform .3s ease;
+  }
+  .sidebar-brand {
+    padding: 28px 24px 22px;
+    border-bottom: 1px solid rgba(255,255,255,.15);
+  }
+  .sidebar-brand .sys-name {
+    font-size: 14px; font-weight: 700;
+    color: #fff; letter-spacing: .02em; line-height: 1.4;
+  }
+  .sidebar-brand .doc-type {
+    font-size: 11px; color: rgba(255,255,255,.6);
+    margin-top: 4px; letter-spacing: .08em; text-transform: uppercase;
+  }
+  .sidebar nav { padding: 12px 0 32px; flex: 1; }
+  .nav-section-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: rgba(255,255,255,.4);
+    padding: 18px 20px 6px;
+  }
+  .nav-item {
+    display: block; padding: 8px 20px;
+    color: rgba(255,255,255,.75);
+    text-decoration: none; font-size: 13px;
+    border-left: 2px solid transparent;
+    transition: all .18s;
+    line-height: 1.4;
+  }
+  .nav-item:hover { color: #fff; background: rgba(255,255,255,.1); }
+  .nav-item.active { color: #fff; border-left-color: #fff; background: rgba(255,255,255,.18); font-weight: 600; }
+  .nav-item .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: rgba(255,255,255,.4); margin-right: 7px;
+  }
+  .nav-item.active .num { color: rgba(255,255,255,.7); }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: 100vh; }
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1; display: flex; justify-content: center;
+  }
+  .main-inner {
+    width: 100%; max-width: 860px;
+    padding: 0 48px 100px;
+  }
+
+  /* ── Cover ── */
+  .cover {
+    min-height: 92vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 100px 0 72px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 72px;
+    position: relative; overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute; top: -120px; right: -80px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(30,110,200,.07) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .cover-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--gold); letter-spacing: .18em;
+    text-transform: uppercase; margin-bottom: 24px;
+    opacity: 0; animation: fadeUp .6s .1s forwards;
+  }
+  .cover-title {
+    font-size: clamp(40px, 6vw, 64px);
+    font-weight: 900; color: var(--text);
+    line-height: 1.1; letter-spacing: -.02em;
+    opacity: 0; animation: fadeUp .6s .2s forwards;
+  }
+  .cover-title em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--gold), #4a9de8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .cover-subtitle {
+    font-size: 18px; font-weight: 300; color: var(--text-muted);
+    margin-top: 16px; letter-spacing: .01em;
+    opacity: 0; animation: fadeUp .6s .3s forwards;
+  }
+  .cover-divider {
+    width: 40px; height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+    margin: 36px 0;
+    opacity: 0; animation: fadeUp .6s .35s forwards;
+  }
+  .cover-goal {
+    background: var(--gold-dim);
+    border: 1px solid var(--gold-border);
+    border-radius: var(--radius);
+    padding: 20px 26px; max-width: 620px;
+    font-size: 14px; color: var(--text-muted); line-height: 1.85;
+    opacity: 0; animation: fadeUp .6s .4s forwards;
+  }
+  .cover-tagline-block {
+    margin: 32px 0 20px;
+    opacity: 0; animation: fadeUp .6s .38s forwards;
+  }
+  .tagline-main {
+    font-size: clamp(22px, 3vw, 32px);
+    font-weight: 800; color: var(--gold);
+    letter-spacing: -.01em; line-height: 1.2;
+  }
+  .tagline-sub {
+    font-size: 15px; color: var(--text-muted);
+    margin-top: 8px; font-weight: 400; line-height: 1.6;
+    letter-spacing: .01em;
+  }
+  .cover-goal { opacity: 0; animation: fadeUp .6s .46s forwards; }
+  .cover-goal strong { color: var(--gold); font-weight: 600; }
+  .cover-meta {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px; margin-top: 48px;
+    opacity: 0; animation: fadeUp .6s .5s forwards;
+  }
+  .meta-card {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 18px;
+  }
+  .meta-label { font-size: 10px; color: var(--text-dim); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 6px; }
+  .meta-value { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.5; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* ── Section ── */
+  section {
+    margin-bottom: 80px;
+    opacity: 0; transform: translateY(20px);
+    transition: opacity .5s, transform .5s;
+  }
+  section.visible { opacity: 1; transform: none; }
+
+  .section-header {
+    display: flex; align-items: baseline; gap: 14px;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 600; color: var(--gold);
+    letter-spacing: .08em; background: var(--gold-dim);
+    border: 1px solid var(--gold-border);
+    padding: 3px 10px; border-radius: 6px; white-space: nowrap;
+  }
+  .section-title {
+    font-size: 26px; font-weight: 800; color: var(--text);
+    letter-spacing: -.01em;
+  }
+
+  h3 {
+    font-size: 15px; font-weight: 700; color: var(--text);
+    margin: 36px 0 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  h3::before {
+    content: '';
+    display: inline-block; width: 3px; height: 14px;
+    background: var(--gold); border-radius: 2px; flex-shrink: 0;
+  }
+
+  p { margin-bottom: 16px; color: var(--text-muted); line-height: 1.85; }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; background: var(--bg-4);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 1px 6px; color: var(--gold);
+  }
+
+  /* ── Table ── */
+  .table-wrap { overflow-x: auto; margin: 20px 0 32px; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: var(--bg-2); }
+  thead tr { background: var(--bg-3); border-bottom: 1px solid var(--border); }
+  thead th {
+    padding: 13px 18px; text-align: left;
+    font-size: 11px; font-weight: 700; color: var(--text-dim);
+    letter-spacing: .08em; text-transform: uppercase; white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-3); }
+  tbody td {
+    padding: 13px 18px; font-size: 13.5px; color: var(--text-muted);
+    vertical-align: top; line-height: 1.7;
+  }
+  tbody td:first-child { color: var(--text); font-weight: 500; }
+
+  /* ── Bullet list ── */
+  .bullet-list { list-style: none; margin: 12px 0 22px; padding: 0; }
+  .bullet-list li {
+    position: relative; padding: 8px 0 8px 20px;
+    font-size: 14px; color: var(--text-muted); line-height: 1.75;
+    border-bottom: 1px solid var(--border);
+  }
+  .bullet-list li:last-child { border-bottom: none; }
+  .bullet-list li::before {
+    content: '—';
+    position: absolute; left: 0;
+    color: var(--gold); font-size: 13px; top: 9px;
+  }
+
+  /* ── Principle cards ── */
+  .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 20px 0; }
+  .principle-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px;
+    transition: border-color .2s, background .2s;
+  }
+  .principle-card:hover { border-color: var(--gold-border); background: var(--bg-3); }
+  .pc-icon { font-size: 26px; margin-bottom: 14px; }
+  .pc-title { font-weight: 700; font-size: 15px; color: var(--text); margin-bottom: 8px; }
+  .pc-desc { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+
+  /* ── Steps ── */
+  .steps { margin: 20px 0; }
+  .step {
+    display: flex; gap: 18px; align-items: flex-start;
+    padding: 18px 0; border-bottom: 1px solid var(--border);
+    opacity: 0; transform: translateX(-8px);
+    transition: opacity .4s, transform .4s;
+  }
+  .step.visible { opacity: 1; transform: none; }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    flex-shrink: 0; width: 32px; height: 32px;
+    background: var(--gold-dim); color: var(--gold);
+    border: 1px solid var(--gold-border); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; font-weight: 700;
+  }
+  .step-content { padding-top: 5px; font-size: 14px; color: var(--text-muted); line-height: 1.75; }
+
+  /* ── Info box ── */
+  .info-box {
+    display: flex; gap: 0;
+    border-radius: var(--radius); overflow: hidden;
+    border: 1px solid var(--gold-border); margin: 28px 0;
+  }
+  .info-box-label {
+    background: var(--gold-dim); color: var(--gold);
+    font-weight: 700; font-size: 12px;
+    padding: 18px 20px; display: flex; align-items: center;
+    justify-content: center; min-width: 84px; text-align: center;
+    letter-spacing: .04em; white-space: nowrap;
+    border-right: 1px solid var(--gold-border);
+  }
+  .info-box-body {
+    background: var(--bg-2); padding: 18px 24px; flex: 1;
+    font-size: 14px; line-height: 1.8; color: var(--text-muted);
+  }
+
+  /* ── Phase tags ── */
+  .phase-section { margin: 20px 0; }
+  .phase-label {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-weight: 700; font-size: 12px;
+    padding: 5px 14px; border-radius: 20px; margin-bottom: 14px;
+  }
+  .phase-p1 { background: var(--gold-dim); color: var(--gold); border: 1px solid var(--gold-border); }
+  .phase-p2 { background: var(--bg-3); color: var(--text-dim); border: 1px solid var(--border); }
+  .phase-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .phase-p1 .phase-dot { background: var(--gold); }
+  .phase-p2 .phase-dot { background: var(--text-dim); }
+
+  /* ── Conclusion ── */
+  .conclusion {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 40px 44px;
+    position: relative; overflow: hidden;
+  }
+  .conclusion::before {
+    content: '';
+    position: absolute; top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(217,119,87,.08), transparent 70%);
+  }
+  .conclusion p { color: var(--text-muted); line-height: 1.9; margin-bottom: 16px; }
+  .conclusion p:last-child { margin-bottom: 0; }
+  .conclusion strong { color: var(--gold); font-weight: 600; }
+
+  /* ══════════════════════════
+     HOMEPAGE PROTOTYPE STYLES
+     ══════════════════════════ */
+  .proto-wrap {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; margin: 24px 0 32px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.4);
+    font-size: 13px; background: #111;
+  }
+  .proto-chrome {
+    background: var(--bg-4); padding: 10px 16px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .chrome-dots { display: flex; gap: 6px; }
+  .chrome-dots span { width: 11px; height: 11px; border-radius: 50%; }
+  .chrome-dots span:nth-child(1){background:#ff5f57}
+  .chrome-dots span:nth-child(2){background:#febc2e}
+  .chrome-dots span:nth-child(3){background:#28c840}
+  .chrome-bar { flex:1; background:var(--bg-2); border-radius:6px; padding:5px 14px; font-size:11px; color:var(--text-dim); border:1px solid var(--border); text-align:center; font-family: 'JetBrains Mono', monospace; }
+  .proto-topbar { background:var(--bg-3); display:flex; align-items:center; gap:16px; padding:12px 20px; border-bottom: 1px solid var(--border); }
+  .proto-logo { color:var(--gold); font-weight:800; font-size:14px; white-space:nowrap; letter-spacing:.04em; }
+  .proto-search { flex:1; background:var(--bg-4); border:1px solid rgba(0,0,0,.1); border-radius:8px; padding:8px 16px; display:flex; align-items:center; gap:8px; color:var(--text-dim); font-size:12px; }
+  .proto-topbar-right { display:flex; align-items:center; gap:10px; }
+  .proto-add-btn { background:var(--gold); color:#000; font-weight:700; font-size:12px; padding:7px 14px; border-radius:6px; white-space:nowrap; }
+  .proto-avatar { width:32px; height:32px; border-radius:50%; background:var(--bg-3); color:var(--gold); font-weight:700; font-size:13px; display:flex; align-items:center; justify-content:center; border:1px solid var(--gold-border); }
+  .proto-body { display:flex; }
+  .proto-sidebar { width:160px; flex-shrink:0; background:var(--bg-3); border-right:1px solid rgba(0,0,0,.1); padding:14px 0; }
+  .proto-sidebar-title { font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--text-dim); padding:0 14px 10px; }
+  .proto-cat { display:flex; align-items:center; justify-content:space-between; padding:8px 14px; font-size:12px; color:var(--text-dim); border-left:2px solid transparent; }
+  .proto-cat.active { background:var(--gold-dim); color:var(--gold); font-weight:700; border-left-color:var(--gold); }
+  .cat-count { background:var(--bg-4); color:var(--text-dim); font-size:9px; padding:1px 6px; border-radius:8px; font-family:'JetBrains Mono',monospace; }
+  .proto-cat.active .cat-count { background:var(--gold); color:#000; }
+  .proto-cat-add { padding:8px 14px; font-size:11px; color:var(--gold); border-top:1px dashed var(--border); margin-top:8px; }
+  .proto-cards { flex:1; padding:16px 18px; background:var(--bg-2); }
+  .proto-results-bar { font-size:11px; color:var(--text-dim); margin-bottom:14px; font-family:'JetBrains Mono',monospace; }
+  .proto-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .proto-card { background:var(--bg); border-radius:10px; border:1px solid rgba(0,0,0,.1); padding:16px; display:flex; flex-direction:column; gap:10px; transition:border-color .2s; }
+  .proto-card:hover { border-color: var(--gold-border); }
+  .pcard-header { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+  .pcard-title { font-weight:700; font-size:13px; color:var(--text); line-height:1.3; }
+  .pcard-tag { font-size:9px; padding:2px 8px; border-radius:8px; background:var(--gold-dim); color:var(--gold); border:1px solid var(--gold-border); font-weight:700; white-space:nowrap; flex-shrink:0; letter-spacing:.04em; }
+  .pcard-desc { font-size:11px; color:var(--text-dim); line-height:1.6; flex:1; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .pcard-platforms { display:flex; gap:5px; flex-wrap:wrap; }
+  .platform-badge { font-size:9px; padding:2px 7px; border-radius:4px; font-weight:700; letter-spacing:.03em; }
+  .platform-badge.gpt  { background:rgba(16,163,127,.15); color:#10a37f; border:1px solid rgba(16,163,127,.3); }
+  .platform-badge.claude { background:var(--gold-dim); color:var(--gold); border:1px solid var(--gold-border); }
+  .platform-badge.gemini { background:rgba(66,133,244,.12); color:#4285f4; border:1px solid rgba(66,133,244,.25); }
+  .pcard-footer { display:flex; align-items:center; justify-content:space-between; padding-top:10px; border-top:1px solid var(--border); }
+  .pcard-meta { font-size:10px; color:var(--text-dim); font-family:'JetBrains Mono',monospace; }
+  .pcard-btns { display:flex; gap:6px; }
+  .pbtn-edit,.pbtn-use { font-size:10px; padding:5px 11px; border-radius:5px; border:none; cursor:pointer; font-weight:700; }
+  .pbtn-edit { background:var(--bg-3); color:var(--text-muted); border:1px solid rgba(0,0,0,.1); }
+  .pbtn-use  { background:var(--gold); color:#000; }
+  .proto-card-empty { border:1px dashed var(--border); background:transparent; box-shadow:none; align-items:center; justify-content:center; min-height:130px; color:var(--text-dim); cursor:pointer; }
+  .proto-card-empty:hover { border-color:var(--gold-border); color:var(--gold); }
+  .pcard-empty-icon { font-size:24px; line-height:1; }
+  .pcard-empty-text { font-size:11px; font-weight:700; margin-top:6px; }
+  .proto-modal-hint { background:var(--gold-dim); border-top:1px solid var(--gold-border); padding:10px 20px; font-size:11px; color:var(--gold); }
+
+  /* ══════════════════════════
+     MODAL PROTOTYPE STYLES
+     ══════════════════════════ */
+  .modal-proto-wrap { background:rgba(30,110,200,.04); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin:20px 0 28px; position:relative; }
+  .modal-overlay-label { text-align:center; font-size:10px; color:var(--text-dim); letter-spacing:.08em; margin-bottom:14px; font-family:'JetBrains Mono',monospace; }
+  .modal-box { background:var(--bg); border-radius:var(--radius); border:1px solid rgba(0,0,0,.1); overflow:hidden; font-size:13px; box-shadow:0 8px 40px rgba(30,110,200,.12); }
+  .modal-header { display:flex; align-items:flex-start; justify-content:space-between; padding:18px 22px 14px; border-bottom:1px solid rgba(0,0,0,.1); background:var(--bg-2); }
+  .modal-header-left { display:flex; flex-direction:column; gap:8px; }
+  .modal-title { font-size:16px; font-weight:800; color:var(--text); letter-spacing:-.01em; }
+  .modal-badges { display:flex; gap:6px; flex-wrap:wrap; }
+  .modal-badge { font-size:10px; padding:2px 9px; border-radius:8px; font-weight:700; letter-spacing:.03em; }
+  .modal-badge.tag { background:var(--gold-dim); color:var(--gold); border:1px solid var(--gold-border); }
+  .modal-badge.platform.gpt { background:rgba(16,163,127,.12); color:#10a37f; border:1px solid rgba(16,163,127,.25); }
+  .modal-badge.platform.claude { background:var(--gold-dim); color:var(--gold); border:1px solid var(--gold-border); }
+  .modal-badge.active-platform { box-shadow:0 0 0 2px var(--gold); }
+  .modal-close { font-size:16px; color:var(--text-dim); cursor:pointer; padding:2px 6px; border-radius:4px; }
+  .modal-body { display:flex; min-height:300px; }
+  .modal-col-left { flex:1.1; padding:18px 18px 18px 22px; border-right:1px solid var(--border); background:var(--bg-2); }
+  .modal-col-right { flex:1; padding:18px 22px 18px 18px; background:var(--bg-3); display:flex; flex-direction:column; gap:0; }
+  .modal-col-title { font-size:10px; font-weight:700; color:var(--gold); letter-spacing:.1em; margin-bottom:14px; text-transform:uppercase; }
+  .modal-desc-block { background:var(--bg-3); border:1px solid rgba(0,0,0,.1); border-radius:8px; padding:10px 12px; }
+  .modal-field-label { font-size:10px; font-weight:700; color:var(--text-dim); letter-spacing:.08em; margin-bottom:6px; text-transform:uppercase; }
+  .modal-desc-text { font-size:12px; color:var(--text-muted); line-height:1.65; }
+  .modal-content-preview { background:var(--bg-2); border:1px solid rgba(0,0,0,.1); border-radius:8px; padding:12px 14px; font-size:12px; color:var(--text-muted); line-height:1.8; white-space:pre-wrap; margin-top:8px; }
+  .var-chip { display:inline-block; background:var(--gold-dim); color:var(--gold); border:1px solid var(--gold-border); border-radius:4px; padding:1px 6px; font-size:11px; font-weight:700; font-family:'JetBrains Mono',monospace; }
+  .modal-var-list { display:flex; flex-direction:column; gap:14px; flex:1; }
+  .modal-var-label { font-size:12px; font-weight:700; color:var(--text); margin-bottom:3px; }
+  .modal-var-hint { font-size:11px; color:var(--text-dim); margin-bottom:6px; }
+  .required { color:#f07070; font-size:13px; }
+  .modal-input { border:1px solid rgba(0,0,0,.12); border-radius:6px; padding:8px 12px; font-size:12px; color:var(--text); background:var(--bg-3); }
+  .modal-input-multi { min-height:52px; }
+  .modal-select { border:1px solid rgba(0,0,0,.12); border-radius:6px; padding:8px 12px; font-size:12px; color:var(--text); background:var(--bg-3); display:flex; justify-content:space-between; }
+  .select-arrow { color:var(--text-dim); }
+  .modal-var-tip { font-size:10px; color:var(--text-dim); margin-top:14px; padding-top:10px; border-top:1px dashed var(--border); }
+  .modal-footer { display:flex; align-items:center; justify-content:space-between; padding:14px 22px; border-top:1px solid rgba(0,0,0,.1); background:var(--bg-2); }
+  .modal-footer-left { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-dim); flex-wrap:wrap; }
+  .modal-footer-info { color:var(--text-dim); }
+  .modal-footer-right { display:flex; gap:10px; }
+  .mfbtn-cancel { background:var(--bg-4); color:var(--text-muted); border:1px solid rgba(0,0,0,.12); padding:8px 18px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; }
+  .mfbtn-use { background:var(--gold); color:#000; border:none; padding:8px 20px; border-radius:6px; font-size:12px; font-weight:800; cursor:pointer; }
+
+  /* Platform choice */
+  .platform-choice-group { display:flex; gap:8px; flex-wrap:wrap; }
+  .platform-choice { display:flex; align-items:center; gap:6px; padding:5px 12px 5px 8px; border:1px solid var(--border); border-radius:8px; cursor:pointer; background:var(--bg-3); transition:border-color .15s, background .15s; }
+  .active-platform-choice { border-color:var(--gold-border); background:var(--gold-dim); }
+  .platform-method-tag { font-size:9px; padding:2px 7px; border-radius:8px; font-weight:700; white-space:nowrap; letter-spacing:.04em; }
+  .platform-method-tag.url { background:rgba(16,163,127,.12); color:#10a37f; }
+  .platform-method-tag.clipboard { background:rgba(212,168,67,.12); color:var(--gold); }
+  .countdown-hint { font-size:12px; color:#2a7a50; background:rgba(16,163,127,.08); border:1px solid rgba(16,163,127,.2); border-radius:6px; padding:6px 14px; display:flex; align-items:center; gap:6px; flex:1; margin-right:14px; }
+  .countdown-icon { font-size:13px; }
+
+  /* Edit modal */
+  .modal-box-edit {}
+  .modal-edit-body { padding:0 22px; max-height:440px; overflow-y:auto; background:var(--bg-2); }
+  .edit-section { padding:16px 0; border-bottom:1px solid rgba(0,0,0,.08); }
+  .edit-section:last-child { border-bottom:none; }
+  .edit-section-title { font-size:12px; font-weight:700; color:var(--gold); margin-bottom:14px; display:flex; align-items:center; gap:10px; letter-spacing:.04em; text-transform:uppercase; }
+  .edit-section-tip { font-size:11px; color:var(--text-dim); font-weight:400; text-transform:none; letter-spacing:0; }
+  .edit-row { margin-bottom:12px; }
+  .edit-row-2col { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .edit-field { display:flex; flex-direction:column; gap:5px; }
+  .edit-label { font-size:11px; font-weight:700; color:var(--text-dim); letter-spacing:.04em; }
+  .edit-input-box,.edit-textarea-box,.edit-select-box { border:1px solid rgba(0,0,0,.12); border-radius:6px; padding:8px 12px; font-size:12px; color:var(--text); background:var(--bg-3); line-height:1.6; }
+  .edit-select-box { display:flex; justify-content:space-between; }
+  .edit-textarea-box { display:flex; align-items:flex-start; }
+  .edit-platform-pick { display:flex; flex-wrap:wrap; gap:7px; margin-top:2px; }
+  .ep-chip { font-size:11px; padding:4px 12px; border-radius:16px; border:1px solid rgba(0,0,0,.12); color:var(--text-dim); cursor:pointer; font-weight:600; }
+  .ep-active { background:var(--gold-dim); color:var(--gold); border-color:var(--gold-border); font-weight:800; }
+  .ep-add { border-style:dashed; color:var(--gold); }
+  .edit-prompt-area { border:1px solid var(--gold-border); border-radius:6px; padding:12px 14px; font-size:12px; color:var(--text); line-height:1.85; background:var(--bg-3); white-space:pre-wrap; min-height:90px; }
+  .cursor-blink { display:inline-block; animation:blink 1s step-end infinite; color:var(--gold); font-weight:700; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .edit-prompt-toolbar { display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap; }
+  .toolbar-btn { font-size:11px; padding:4px 12px; border-radius:5px; background:rgba(30,110,200,.08); color:var(--gold); font-weight:700; cursor:pointer; border:1px solid rgba(217,119,87,.3); }
+  .toolbar-divider { flex:1; }
+  .toolbar-hint { font-size:10px; color:var(--text-dim); font-family:'JetBrains Mono',monospace; }
+  .var-config-table { border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .var-config-header,.var-config-row { display:grid; grid-template-columns:110px 1fr 110px 110px 52px 30px; gap:8px; padding:9px 12px; align-items:center; }
+  .var-config-header { background:var(--bg-3); font-size:10px; font-weight:700; color:var(--text-dim); letter-spacing:.06em; text-transform:uppercase; border-bottom:1px solid var(--border); }
+  .var-config-row { border-bottom:1px solid rgba(0,0,0,.08); font-size:12px; }
+  .var-config-row:last-child { border-bottom:none; }
+  .var-chip-sm { display:inline-block; background:var(--gold-dim); color:var(--gold); border:1px solid var(--gold-border); border-radius:4px; padding:2px 8px; font-size:10px; font-weight:700; font-family:'JetBrains Mono',monospace; }
+  .vc-input { border:1px solid rgba(0,0,0,.12); border-radius:4px; padding:4px 8px; font-size:11px; color:var(--text-muted); background:var(--bg-3); }
+  .vc-select { border:1px solid rgba(0,0,0,.12); border-radius:4px; padding:4px 8px; font-size:11px; color:var(--text-muted); background:var(--bg-3); display:flex; justify-content:space-between; }
+  .vc-toggle { font-size:16px; text-align:center; }
+  .vc-toggle.on { color:var(--gold); }
+  .vc-toggle.off { color:var(--text-dim); }
+  .vc-del { color:var(--text-dim); cursor:pointer; text-align:center; font-size:13px; }
+  .var-add-row { padding:9px 12px; font-size:11px; color:var(--gold); cursor:pointer; border-top:1px dashed rgba(0,0,0,.1); font-weight:700; }
+
+  /* Scrollbar */
+  .sidebar::-webkit-scrollbar { width:4px; }
+  .sidebar::-webkit-scrollbar-track { background:transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  .modal-edit-body::-webkit-scrollbar { width:4px; }
+  .modal-edit-body::-webkit-scrollbar-track { background:transparent; }
+  .modal-edit-body::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+  @media (max-width: 640px) {
+    :root { --sidebar-w: 0px; }
+    .sidebar { transform: translateX(-264px); }
+    .sidebar.open { transform: translateX(0); width: 264px; }
+    .main { margin-left: 0; }
+    .main-inner { padding: 0 20px 60px; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .proto-grid { grid-template-columns: 1fr 1fr; }
+    .toc-toggle { display:flex !important; }
+  }
+  .toc-toggle { display: none; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sys-name">PromptCubby</div>
+      <div class="doc-type">UX Planning &amp; Design Doc</div>
+    </div>
+    <nav>
+      <div class="nav-section-label">目录</div>
+      <a class="nav-item" href="#cover"><span class="num">00</span>封面</a>
+      <a class="nav-item" href="#s1"><span class="num">01</span>项目概述</a>
+      <a class="nav-item" href="#s2"><span class="num">02</span>设计原则</a>
+      <a class="nav-item" href="#s3"><span class="num">03</span>首页整体布局</a>
+      <a class="nav-item" href="#s4"><span class="num">04</span>顶部区域设计</a>
+      <a class="nav-item" href="#s5"><span class="num">05</span>左侧分类区域</a>
+      <a class="nav-item" href="#s6"><span class="num">06</span>提示词卡片设计</a>
+      <a class="nav-item" href="#s7"><span class="num">07</span>使用流程设计</a>
+      <a class="nav-item" href="#s8"><span class="num">08</span>编辑流程设计</a>
+      <a class="nav-item" href="#s9"><span class="num">09</span>新增提示词流程</a>
+      <a class="nav-item" href="#s10"><span class="num">10</span>核心交互闭环</a>
+      <a class="nav-item" href="#s11"><span class="num">11</span>一期版本建议</a>
+      <a class="nav-item" href="#s12"><span class="num">12</span>结论</a>
+    </nav>
+  </aside>
+
+  <button class="toc-toggle" id="tocBtn" style="position:fixed;bottom:24px;right:24px;width:48px;height:48px;background:var(--gold);color:#000;border-radius:50%;border:none;font-size:20px;cursor:pointer;z-index:200;display:none;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(212,168,67,.4)" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+
+  <main class="main">
+    <div class="main-inner">
+<!-- Cover -->
+    <div class="cover" id="cover">
+      <div class="cover-eyebrow">PromptCubby · Prompt Management System</div>
+      <h1 class="cover-title">Prompt<em>Cubby</em></h1>
+      <div class="cover-subtitle">页面规划与设计文档 &nbsp;·&nbsp; UX Planning &amp; Design Document</div>
+      <div class="cover-divider"></div>
+      <div class="cover-tagline-block">
+        <div class="tagline-main">Prompt better. Build faster.</div>
+        <div class="tagline-sub">Write once. Use everywhere. One prompt. Endless possibilities.</div>
+      </div>
+      <div class="cover-goal">
+        <strong>核心目标：</strong>让用户可以高效地搜索、分类查看、编辑并使用提示词；当提示词存在变量时，通过弹窗先补充变量，再跳转到目标 AI 平台执行。
+      </div>
+      <div class="cover-meta">
+        <div class="meta-card">
+          <div class="meta-label">文档定位</div>
+          <div class="meta-value">首页与核心弹窗交互，产品·设计·开发统一参考</div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">当前范围</div>
+          <div class="meta-value">页面结构、卡片、流程设计，不含技术实现</div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">整理版本</div>
+          <div class="meta-value">基于用户口述需求汇总，优化整理版</div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">技术栈</div>
+          <div class="meta-value">Next.js &amp; SQLite</div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-label">文档日期</div>
+          <div class="meta-value" id="docDate"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 一 -->
+    <section id="s1">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <h2 class="section-title">项目概述</h2>
+      </div>
+      <p>PromptCubby 是一款面向个人与团队的提示词管理工具，帮助用户统一存储、分类、快速查找并一键投递提示词到各大 AI 平台，真正实现 <strong>Write once, use everywhere</strong>。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>属性</th><th>内容</th></tr></thead>
+          <tbody>
+            <tr><td>项目名称</td><td>PromptCubby</td></tr>
+            <tr><td>品牌标语</td><td>Prompt better. Build faster. Write once. Use everywhere.</td></tr>
+            <tr><td>技术栈</td><td>Next.js（前端框架）+ SQLite（本地数据库）</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 二 -->
+    <section id="s2">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <h2 class="section-title">设计原则</h2>
+      </div>
+      <div class="cards-grid">
+        <div class="principle-card">
+          <div class="pc-icon">🎯</div>
+          <div class="pc-title">简洁清晰</div>
+          <div class="pc-desc">页面结构一眼可理解，重点操作容易找到。</div>
+        </div>
+        <div class="principle-card">
+          <div class="pc-icon">⚡</div>
+          <div class="pc-title">高效使用</div>
+          <div class="pc-desc">尽量减少用户复制、粘贴、反复切换页面的成本。</div>
+        </div>
+        <div class="principle-card">
+          <div class="pc-icon">🔧</div>
+          <div class="pc-title">可扩展性</div>
+          <div class="pc-desc">后续可继续增加平台、标签、收藏、权限等能力。</div>
+        </div>
+        <div class="principle-card">
+          <div class="pc-icon">✅</div>
+          <div class="pc-title">先确认后执行</div>
+          <div class="pc-desc">涉及变量的提示词，必须先在弹窗中补充完整，再执行使用动作。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 三 -->
+    <section id="s3">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <h2 class="section-title">首页整体布局规划</h2>
+      </div>
+      <p>首页采用「顶部操作区 + 左侧分类区 + 右侧卡片区」的三栏式结构，满足搜索、筛选、浏览与操作的完整闭环。</p>
+
+      <!-- Homepage Prototype -->
+      <div class="proto-wrap">
+        <div class="proto-chrome">
+          <div class="chrome-dots"><span></span><span></span><span></span></div>
+          <div class="chrome-bar">promptcubby.app</div>
+          <div style="width:60px"></div>
+        </div>
+        <div class="proto-topbar">
+          <div class="proto-logo">📦 PromptCubby</div>
+          <div class="proto-search">
+            <span class="search-icon">🔍</span>
+            <span class="search-placeholder">搜索提示词标题、描述、分类、平台…</span>
+          </div>
+          <div class="proto-topbar-right">
+            <div class="proto-add-btn">＋ 新增提示词</div>
+            <div class="proto-avatar">张</div>
+          </div>
+        </div>
+        <div class="proto-body">
+          <div class="proto-sidebar">
+            <div class="proto-sidebar-title">分类导航</div>
+            <div class="proto-cat active">📋 全部提示词 <span class="cat-count">24</span></div>
+            <div class="proto-cat">✍️ 文案类 <span class="cat-count">6</span></div>
+            <div class="proto-cat">📊 分析类 <span class="cat-count">4</span></div>
+            <div class="proto-cat">🌐 翻译类 <span class="cat-count">3</span></div>
+            <div class="proto-cat">💻 编程类 <span class="cat-count">5</span></div>
+            <div class="proto-cat">📣 营销类 <span class="cat-count">3</span></div>
+            <div class="proto-cat">🎧 客服类 <span class="cat-count">3</span></div>
+            <div class="proto-cat-add">＋ 自定义分类</div>
+          </div>
+          <div class="proto-cards">
+            <div class="proto-results-bar">共 24 个提示词 &nbsp;·&nbsp; 全部分类</div>
+            <div class="proto-grid">
+              <div class="proto-card">
+                <div class="pcard-header"><div class="pcard-title">品牌文案生成器</div><div class="pcard-tag">文案类</div></div>
+                <div class="pcard-desc">根据品牌调性、目标受众和产品特点，自动生成多风格品牌文案，适用于广告、社媒和官网场景。</div>
+                <div class="pcard-platforms"><span class="platform-badge gpt">ChatGPT</span><span class="platform-badge claude">Claude</span></div>
+                <div class="pcard-footer"><div class="pcard-meta">含 3 个变量</div><div class="pcard-btns"><button class="pbtn-edit">编辑</button><button class="pbtn-use">使用</button></div></div>
+              </div>
+              <div class="proto-card">
+                <div class="pcard-header"><div class="pcard-title">数据分析报告</div><div class="pcard-tag">分析类</div></div>
+                <div class="pcard-desc">输入数据背景与分析维度，输出结构化分析报告，包含趋势判断、问题归因与行动建议。</div>
+                <div class="pcard-platforms"><span class="platform-badge gpt">ChatGPT</span><span class="platform-badge gemini">Gemini</span></div>
+                <div class="pcard-footer"><div class="pcard-meta">含 2 个变量</div><div class="pcard-btns"><button class="pbtn-edit">编辑</button><button class="pbtn-use">使用</button></div></div>
+              </div>
+              <div class="proto-card">
+                <div class="pcard-header"><div class="pcard-title">代码审查助手</div><div class="pcard-tag">编程类</div></div>
+                <div class="pcard-desc">对指定代码片段进行安全性、性能、可读性三维度审查，并给出具体改进建议与示例。</div>
+                <div class="pcard-platforms"><span class="platform-badge claude">Claude</span></div>
+                <div class="pcard-footer"><div class="pcard-meta">无变量</div><div class="pcard-btns"><button class="pbtn-edit">编辑</button><button class="pbtn-use">使用</button></div></div>
+              </div>
+              <div class="proto-card">
+                <div class="pcard-header"><div class="pcard-title">多语言翻译优化</div><div class="pcard-tag">翻译类</div></div>
+                <div class="pcard-desc">将输入文本翻译为目标语言，并针对文化背景进行本地化润色，保留原文语气与风格。</div>
+                <div class="pcard-platforms"><span class="platform-badge gpt">ChatGPT</span><span class="platform-badge claude">Claude</span><span class="platform-badge gemini">Gemini</span></div>
+                <div class="pcard-footer"><div class="pcard-meta">含 2 个变量</div><div class="pcard-btns"><button class="pbtn-edit">编辑</button><button class="pbtn-use">使用</button></div></div>
+              </div>
+              <div class="proto-card">
+                <div class="pcard-header"><div class="pcard-title">社媒营销文案</div><div class="pcard-tag">营销类</div></div>
+                <div class="pcard-desc">根据产品卖点与平台风格，生成适配微博、小红书、抖音等平台的营销短文案与话题标签。</div>
+                <div class="pcard-platforms"><span class="platform-badge gpt">ChatGPT</span></div>
+                <div class="pcard-footer"><div class="pcard-meta">含 4 个变量</div><div class="pcard-btns"><button class="pbtn-edit">编辑</button><button class="pbtn-use">使用</button></div></div>
+              </div>
+              <div class="proto-card proto-card-empty">
+                <div class="pcard-empty-icon">＋</div>
+                <div class="pcard-empty-text">新增提示词</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="proto-modal-hint">
+          <span>💡 点击「使用」按钮后弹出变量确认弹窗，填写完成后跳转至目标 AI 平台</span>
+        </div>
+      </div>
+
+      <style>
+        .proto-wrap { border:1px solid var(--border); border-radius:12px; overflow:hidden; box-shadow:0 4px 24px rgba(26,92,170,.12); margin:20px 0 28px; font-size:13px; background:#f5f7fa; }
+        .proto-chrome { background:#e8eaed; padding:10px 16px; display:flex; align-items:center; gap:12px; border-bottom:1px solid #d0d3d8; }
+        .chrome-dots { display:flex; gap:6px; }
+        .chrome-dots span { width:11px; height:11px; border-radius:50%; background:#ccc; }
+        .chrome-dots span:nth-child(1){background:#ff5f57} .chrome-dots span:nth-child(2){background:#febc2e} .chrome-dots span:nth-child(3){background:#28c840}
+        .chrome-bar { flex:1; background:#fff; border-radius:6px; padding:5px 14px; font-size:12px; color:var(--text-dim); border:1px solid #d0d3d8; text-align:center; }
+        .proto-topbar { background:var(--primary); display:flex; align-items:center; gap:16px; padding:12px 20px; }
+        .proto-logo { color:#000; font-weight:700; font-size:15px; white-space:nowrap; letter-spacing:.02em; }
+        .proto-search { flex:1; background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25); border-radius:8px; padding:8px 16px; display:flex; align-items:center; gap:8px; color:rgba(255,255,255,.7); font-size:13px; }
+        .proto-topbar-right { display:flex; align-items:center; gap:12px; }
+        .proto-add-btn { background:#fff; color:var(--gold); font-weight:700; font-size:12px; padding:7px 14px; border-radius:6px; white-space:nowrap; }
+        .proto-avatar { width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.25); color:#000; font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center; border:2px solid rgba(255,255,255,.4); }
+        .proto-body { display:flex; }
+        .proto-sidebar { width:168px; flex-shrink:0; background:#fff; border-right:1px solid var(--border); padding:16px 0; }
+        .proto-sidebar-title { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#aaa; padding:0 16px 10px; }
+        .proto-cat { display:flex; align-items:center; justify-content:space-between; padding:9px 16px; font-size:13px; color:var(--text-muted); border-left:3px solid transparent; }
+        .proto-cat.active { background:var(--accent-light); color:var(--gold); font-weight:600; border-left-color:var(--gold); }
+        .cat-count { background:#eee; color:#888; font-size:10px; padding:1px 6px; border-radius:10px; font-family:'JetBrains Mono',monospace; }
+        .proto-cat.active .cat-count { background:var(--accent); color:#000; }
+        .proto-cat-add { padding:9px 16px; font-size:12px; color:var(--gold); border-top:1px dashed var(--border); margin-top:8px; }
+        .proto-cards { flex:1; padding:16px 20px; background:#f5f7fa; }
+        .proto-results-bar { font-size:12px; color:#888; margin-bottom:14px; }
+        .proto-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+        .proto-card { background:#fff; border-radius:10px; border:1px solid var(--border); padding:16px; display:flex; flex-direction:column; gap:10px; box-shadow:0 1px 6px rgba(0,0,0,.05); }
+        .pcard-header { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+        .pcard-title { font-weight:700; font-size:13.5px; color:var(--text); line-height:1.3; }
+        .pcard-tag { font-size:10px; padding:2px 8px; border-radius:10px; background:var(--accent-light); color:var(--gold); font-weight:600; white-space:nowrap; flex-shrink:0; }
+        .pcard-desc { font-size:12px; color:var(--text-dim); line-height:1.6; flex:1; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+        .pcard-platforms { display:flex; gap:6px; flex-wrap:wrap; }
+        .platform-badge { font-size:10px; padding:2px 8px; border-radius:4px; font-weight:600; }
+        .platform-badge.gpt { background:#e7f5ee; color:#1a7a45; }
+        .platform-badge.claude { background:#e8f0fb; color:#1a5caa; }
+        .platform-badge.gemini { background:#fef3e2; color:#b06000; }
+        .pcard-footer { display:flex; align-items:center; justify-content:space-between; padding-top:10px; border-top:1px solid #f0f0f0; }
+        .pcard-meta { font-size:11px; color:#aaa; }
+        .pcard-btns { display:flex; gap:6px; }
+        .pbtn-edit,.pbtn-use { font-size:11px; padding:5px 12px; border-radius:5px; border:none; cursor:pointer; font-weight:600; }
+        .pbtn-edit { background:#f0f0f0; color:var(--text-muted); }
+        .pbtn-use { background:var(--accent); color:#000; }
+        .proto-card-empty { border:2px dashed var(--border); background:transparent; box-shadow:none; align-items:center; justify-content:center; min-height:140px; color:#bbb; }
+        .pcard-empty-icon { font-size:28px; line-height:1; }
+        .pcard-empty-text { font-size:12px; font-weight:600; margin-top:6px; }
+        .proto-modal-hint { background:var(--gold-light); border-top:1px solid #f0d080; padding:10px 20px; font-size:12px; color:#7a5800; }
+      </style>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>区域</th><th>主要内容</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>顶部区域</td><td>搜索框 / 新增按钮 / 用户头像</td><td>承担全局检索与全局操作入口。</td></tr>
+            <tr><td>左侧区域</td><td>提示词分类导航</td><td>按分类快速筛选右侧卡片内容。</td></tr>
+            <tr><td>右侧区域</td><td>提示词卡片列表</td><td>展示提示词关键信息，并提供使用、编辑等操作。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 四 -->
+    <section id="s4">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <h2 class="section-title">顶部区域设计</h2>
+      </div>
+      <h3>4.1 搜索框</h3>
+      <ul class="bullet-list">
+        <li>位于页面顶部显著位置，用于根据关键词快速查找提示词。</li>
+        <li>建议支持按标题、描述、分类、变量名、AI 平台名称进行检索。</li>
+        <li>交互建议：支持回车搜索、清空输入、搜索结果联动右侧卡片区。</li>
+      </ul>
+      <h3>4.2 新增提示词按钮</h3>
+      <ul class="bullet-list">
+        <li>位于页面右上角，用户头像左侧。</li>
+        <li>点击后打开新增提示词弹窗，字段结构可与编辑弹窗保持一致。</li>
+      </ul>
+      <h3>4.3 用户头像</h3>
+      <ul class="bullet-list">
+        <li>展示当前登录用户身份。</li>
+        <li>后续可扩展个人中心、设置、退出登录等入口。</li>
+      </ul>
+    </section>
+
+    <!-- 五 -->
+    <section id="s5">
+      <div class="section-header">
+        <span class="section-num">05</span>
+        <h2 class="section-title">左侧分类区域设计</h2>
+      </div>
+      <p>左侧区域用于提示词分类导航，帮助用户快速按业务场景定位内容。</p>
+      <ul class="bullet-list">
+        <li>建议默认包含：全部提示词、文案类、分析类、翻译类、编程类、营销类、客服类、自定义分类。</li>
+        <li>默认选中「全部提示词」。</li>
+        <li>点击分类后，对应分类高亮，右侧提示词卡片同步刷新。</li>
+        <li>当分类较多时，应支持滚动与后续分类管理能力扩展。</li>
+      </ul>
+    </section>
+
+    <!-- 六 -->
+    <section id="s6">
+      <div class="section-header">
+        <span class="section-num">06</span>
+        <h2 class="section-title">提示词卡片设计</h2>
+      </div>
+      <p>右侧主体区域采用卡片式展示，每张卡片用于承载一个提示词模板的核心信息与常用操作。</p>
+      <ul class="bullet-list">
+        <li>卡片应展示：标题、描述、适用 AI 大模型平台。</li>
+        <li>卡片应提供：使用按钮、编辑按钮。</li>
+        <li>原先的「复制按钮」不保留，因为部分提示词存在变量，直接复制不适合完整使用场景。</li>
+      </ul>
+      <h3>6.1 卡片字段说明</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>字段</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td>标题</td><td>用于说明提示词名称，要求简洁明确。</td></tr>
+            <tr><td>描述</td><td>简要说明提示词用途、使用场景与输出目标，建议控制在 1～3 行。</td></tr>
+            <tr><td>适用平台</td><td>展示可使用的 AI 平台图标或名称，例如 ChatGPT、Claude、Gemini 等。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>6.2 平台图标 / 名称交互</h3>
+      <ul class="bullet-list">
+        <li>平台图标或名称支持点击。</li>
+        <li>若提示词<strong>无变量</strong>，可直接跳转到对应 AI 平台，并自动带入提示词内容。</li>
+        <li>若提示词<strong>存在变量</strong>，则先打开「使用提示词弹窗」，用户完成变量填写后，再执行跳转与带入。</li>
+      </ul>
+    </section>
+
+    <!-- 七 -->
+    <section id="s7">
+      <div class="section-header">
+        <span class="section-num">07</span>
+        <h2 class="section-title">使用流程设计</h2>
+      </div>
+      <p>「使用」按钮不等于直接复制，而是进入「确认并执行」的流程。点击后系统根据目标平台自动选择最优投递方式，无需用户感知差异。</p>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content">用户点击卡片上的「使用」按钮。</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content">系统打开「使用提示词弹窗」，展示提示词标题、描述、正文与变量项。</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content">用户在右栏填写或调整变量，左栏正文实时预览替换效果。</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-content">用户在底部选择目标平台，点击「生成并跳转」。</div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-content">系统按平台类型执行投递：Claude 通过 URL 直接预填；其他平台自动复制到剪贴板并显示倒计时提示。</div></div>
+        <div class="step"><div class="step-num">6</div><div class="step-content">新标签页打开目标平台，Claude 自动填入提示词；其他平台用户直接粘贴即可。</div></div>
+      </div>
+
+      <h3>7.1 平台投递机制</h3>
+      <p>不同 AI 平台的技术能力不同，系统按以下两种方式分别处理，用户选择平台后自动适配，无需手动切换。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>平台</th><th>投递方式</th><th>技术实现</th><th>用户体验</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="modal-badge platform claude" style="font-size:12px;padding:3px 10px">Claude</span></td>
+              <td>URL Scheme 预填</td>
+              <td>拼接 <code>claude.ai/new?q=</code> + URL 编码后的完整提示词，新标签页打开</td>
+              <td>✅ 自动填入输入框，无需任何手动操作</td>
+            </tr>
+            <tr>
+              <td><span class="modal-badge platform gpt" style="font-size:12px;padding:3px 10px">ChatGPT</span>&nbsp;<span style="font-size:11px;color:#aaa">Gemini · 文心 · 等</span></td>
+              <td>剪贴板复制 + 引导跳转</td>
+              <td>调用 <code>navigator.clipboard.writeText()</code> 写入剪贴板，同时打开目标平台新标签页</td>
+              <td>⚡ 显示 3 秒倒计时提示「已复制，跳转后直接粘贴」，用户手动 Ctrl+V</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="info-box" style="margin:20px 0">
+        <div class="info-box-label">倒计时设计</div>
+        <div class="info-box-body">对于剪贴板方式的平台，「生成并跳转」按钮点击后原地变为倒计时状态（如「✓ 已复制 · 3s 后跳转」），给用户心理准备。3 秒结束后打开新标签页，原弹窗保持打开，方便用户返回查看或重新选择平台。</div>
+      </div>
+
+      <h3>7.2 弹窗布局结构</h3>
+      <p>弹窗采用「左右两栏」布局：左侧固定展示提示词原文内容，右侧为变量填写区，让用户在填写变量时始终能参照原文，减少来回切换。</p>
+
+      <!-- Use Modal Prototype -->
+      <div class="modal-proto-wrap">
+        <div class="modal-overlay-label">[ 背景遮罩层 · 点击可关闭 ]</div>
+        <div class="modal-box">
+          <!-- Modal header -->
+          <div class="modal-header">
+            <div class="modal-header-left">
+              <div class="modal-title">品牌文案生成器</div>
+              <div class="modal-badges">
+                <span class="modal-badge tag">文案类</span>
+                <span class="modal-badge platform gpt">ChatGPT</span>
+                <span class="modal-badge platform claude">Claude</span>
+              </div>
+            </div>
+            <div class="modal-close">✕</div>
+          </div>
+          <!-- Modal body: two columns -->
+          <div class="modal-body">
+            <!-- Left: preview -->
+            <div class="modal-col-left">
+              <div class="modal-col-title">📄 提示词预览</div>
+              <div class="modal-desc-block">
+                <div class="modal-field-label">描述</div>
+                <div class="modal-desc-text">根据品牌调性、目标受众和产品特点，自动生成多风格品牌文案，适用于广告、社媒和官网场景。</div>
+              </div>
+              <div class="modal-field-label" style="margin-top:14px">提示词正文</div>
+              <div class="modal-content-preview">你是一位专业的品牌文案策划师。请根据以下信息，为品牌 <span class="var-chip">{{品牌名称}}</span> 生成一篇适用于 <span class="var-chip">{{使用场景}}</span> 的文案。
+
+目标受众：<span class="var-chip">{{目标受众}}</span>
+
+要求：语言风格符合品牌调性，突出核心卖点，结尾附有行动号召语句。</div>
+            </div>
+            <!-- Right: variables -->
+            <div class="modal-col-right">
+              <div class="modal-col-title">✏️ 填写变量</div>
+              <div class="modal-var-list">
+                <div class="modal-var-item">
+                  <div class="modal-var-label">品牌名称 <span class="required">*</span></div>
+                  <div class="modal-var-hint">填写您的品牌或产品名称</div>
+                  <div class="modal-input">示例：清风茶饮</div>
+                </div>
+                <div class="modal-var-item">
+                  <div class="modal-var-label">使用场景 <span class="required">*</span></div>
+                  <div class="modal-var-hint">选择文案投放的渠道或场景</div>
+                  <div class="modal-select">
+                    <span>小红书推广帖</span><span class="select-arrow">▾</span>
+                  </div>
+                </div>
+                <div class="modal-var-item">
+                  <div class="modal-var-label">目标受众</div>
+                  <div class="modal-var-hint">描述核心用户群体特征</div>
+                  <div class="modal-input modal-input-multi">18-35岁都市白领，注重生活品质</div>
+                </div>
+              </div>
+              <div class="modal-var-tip">💡 带 <span class="required">*</span> 为必填项；变量将自动替换正文中对应位置</div>
+            </div>
+          </div>
+          <!-- Modal footer -->
+          <div class="modal-footer" style="flex-direction:column;gap:12px;align-items:stretch">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span class="modal-footer-info">🔗 选择跳转平台：</span>
+              <div class="platform-choice-group">
+                <div class="platform-choice active-platform-choice">
+                  <span class="modal-badge platform gpt">ChatGPT</span>
+                  <span class="platform-method-tag clipboard">📋 复制粘贴</span>
+                </div>
+                <div class="platform-choice">
+                  <span class="modal-badge platform claude">Claude</span>
+                  <span class="platform-method-tag url">🔗 自动填入</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div class="countdown-hint">
+                <span class="countdown-icon">✓</span> 提示词已复制到剪贴板 · <strong>3s</strong> 后跳转，请在新页面直接粘贴
+              </div>
+              <div class="modal-footer-right">
+                <button class="mfbtn-cancel">取消</button>
+                <button class="mfbtn-use">生成并跳转 →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3>7.3 字段规格说明</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>区域</th><th>字段</th><th>类型</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td rowspan="3" style="font-weight:700;color:var(--gold);vertical-align:middle">左栏·预览区</td><td>提示词标题</td><td>只读文本</td><td>展示当前提示词名称，不可编辑。</td></tr>
+            <tr><td>描述</td><td>只读文本</td><td>说明提示词适用场景，帮助用户确认是否选对模板。</td></tr>
+            <tr><td>提示词正文</td><td>只读预览</td><td>完整展示模板内容，变量位置以高亮标签标出，用户填写后实时替换预览。</td></tr>
+            <tr><td rowspan="4" style="font-weight:700;color:var(--gold);vertical-align:middle">右栏·变量区</td><td>变量名称</td><td>标签</td><td>与正文中 <code>{{变量名}}</code> 一一对应，标注是否必填。</td></tr>
+            <tr><td>变量说明</td><td>提示文字</td><td>简要说明该变量的填写要求或示例，降低用户理解成本。</td></tr>
+            <tr><td>输入控件</td><td>多种类型</td><td>根据变量类型渲染：单行文本、多行文本、下拉选择、单选、多选、数字、日期。</td></tr>
+            <tr><td>默认值</td><td>预填内容</td><td>若配置了默认值则自动填入，用户可覆盖修改。</td></tr>
+            <tr><td rowspan="3" style="font-weight:700;color:var(--gold);vertical-align:middle">底部·操作区</td><td>平台选择器</td><td>单选标签组</td><td>展示该提示词支持的平台，每个平台标签旁标注投递方式（「🔗 自动填入」或「📋 复制粘贴」），帮助用户提前知晓操作。</td></tr>
+            <tr><td>倒计时提示条</td><td>状态提示</td><td>仅剪贴板方式触发：按钮点击后在底部展示「✓ 已复制 · Xs 后跳转」，倒计时结束后自动打开新标签页。</td></tr>
+            <tr><td>生成并跳转</td><td>主操作按钮</td><td>校验必填项通过后生成完整提示词。Claude 平台：拼接 URL 打开新标签页；其他平台：写入剪贴板 + 倒计时跳转。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>7.4 交互细节说明</h3>
+      <ul class="bullet-list">
+        <li>正文预览区变量标签实时联动：右侧填写内容后，左侧对应标签即时填充预览文本，颜色从黄色（待填）变为绿色（已填）。</li>
+        <li>必填项未填写时，点击「生成并跳转」按钮给出内联错误提示（标红输入框 + 提示文字），不弹出系统 alert。</li>
+        <li>Claude 平台：提示词内容经 <code>encodeURIComponent</code> 编码后拼入 URL，无需写剪贴板，跳转即完成。注意 URL 长度上限约 8000 字符，超长时降级为剪贴板方式并提示用户。</li>
+        <li>剪贴板方式：写入成功后立即开始 3 秒倒计时，期间底部按钮变为「✓ 已复制 · 2s…」状态，倒计时结束自动打开新标签页；若浏览器拒绝剪贴板权限，提示用户手动复制并提供「点击复制」的备用按钮。</li>
+        <li>跳转后原弹窗保持打开状态，用户返回后可切换其他平台二次投递，已填变量保留不清空。</li>
+        <li>弹窗宽度建议 760px，高度自适应，内容超长时右栏独立滚动，左栏正文区固定。</li>
+        <li>本次会话内缓存已填变量值，同一提示词再次打开时自动回填，减少重复输入。</li>
+      </ul>
+    </section>
+
+    <!-- 八 -->
+    <section id="s8">
+      <div class="section-header">
+        <span class="section-num">08</span>
+        <h2 class="section-title">编辑流程设计</h2>
+      </div>
+      <p>点击卡片上的「编辑」按钮后打开编辑弹窗，用于维护提示词内容，确保模板可持续优化与复用。编辑弹窗与新增弹窗共用同一套组件，通过标题和默认值区分场景。</p>
+
+      <h3>8.1 弹窗布局结构</h3>
+      <p>编辑弹窗采用「顶部基本信息 + 中部正文编辑 + 底部变量配置」的纵向三段式结构，字段逐区展开，避免一次性呈现过多内容造成认知负担。</p>
+
+      <!-- Edit Modal Prototype -->
+      <div class="modal-proto-wrap">
+        <div class="modal-overlay-label">[ 背景遮罩层 · 点击可关闭 ]</div>
+        <div class="modal-box modal-box-edit">
+          <div class="modal-header">
+            <div class="modal-header-left">
+              <div class="modal-title">编辑提示词</div>
+              <div class="modal-badges"><span class="modal-badge tag">修改后自动同步卡片</span></div>
+            </div>
+            <div class="modal-close">✕</div>
+          </div>
+          <div class="modal-edit-body">
+            <!-- Section A: Basic info -->
+            <div class="edit-section">
+              <div class="edit-section-title">基本信息</div>
+              <div class="edit-row edit-row-2col">
+                <div class="edit-field">
+                  <div class="edit-label">提示词标题 <span class="required">*</span></div>
+                  <div class="edit-input-box">品牌文案生成器</div>
+                </div>
+                <div class="edit-field">
+                  <div class="edit-label">所属分类 <span class="required">*</span></div>
+                  <div class="edit-select-box">文案类 ▾</div>
+                </div>
+              </div>
+              <div class="edit-row">
+                <div class="edit-field">
+                  <div class="edit-label">适用平台</div>
+                  <div class="edit-platform-pick">
+                    <span class="ep-chip ep-active">✓ ChatGPT</span>
+                    <span class="ep-chip ep-active">✓ Claude</span>
+                    <span class="ep-chip">+ Gemini</span>
+                    <span class="ep-chip">+ 文心一言</span>
+                    <span class="ep-chip ep-add">＋ 添加平台</span>
+                  </div>
+                </div>
+              </div>
+              <div class="edit-row">
+                <div class="edit-field">
+                  <div class="edit-label">描述</div>
+                  <div class="edit-textarea-box" style="height:54px">根据品牌调性、目标受众和产品特点，自动生成多风格品牌文案，适用于广告、社媒和官网场景。</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section B: Prompt body -->
+            <div class="edit-section">
+              <div class="edit-section-title">提示词正文
+                <span class="edit-section-tip">使用 <code>{{变量名}}</code> 插入变量占位符</span>
+              </div>
+              <div class="edit-prompt-area">你是一位专业的品牌文案策划师。请根据以下信息，为品牌 <span class="var-chip">{{品牌名称}}</span> 生成一篇适用于 <span class="var-chip">{{使用场景}}</span> 的文案。
+
+目标受众：<span class="var-chip">{{目标受众}}</span>
+
+要求：语言风格符合品牌调性，突出核心卖点，结尾附有行动号召语句。<span class="cursor-blink">|</span></div>
+              <div class="edit-prompt-toolbar">
+                <span class="toolbar-btn">＋ 插入变量</span>
+                <span class="toolbar-btn">📋 复制正文</span>
+                <span class="toolbar-divider"></span>
+                <span class="toolbar-hint">已识别到 3 个变量占位符</span>
+              </div>
+            </div>
+
+            <!-- Section C: Variables -->
+            <div class="edit-section">
+              <div class="edit-section-title">变量配置
+                <span class="edit-section-tip">根据正文中的占位符自动识别，可手动补充配置</span>
+              </div>
+              <div class="var-config-table">
+                <div class="var-config-header">
+                  <span>变量名</span><span>说明/提示</span><span>类型</span><span>默认值</span><span>必填</span><span></span>
+                </div>
+                <div class="var-config-row">
+                  <span class="var-chip-sm">品牌名称</span>
+                  <span><div class="vc-input">填写品牌或产品名</div></span>
+                  <span><div class="vc-select">单行文本 ▾</div></span>
+                  <span><div class="vc-input">—</div></span>
+                  <span><div class="vc-toggle on">●</div></span>
+                  <span class="vc-del">🗑</span>
+                </div>
+                <div class="var-config-row">
+                  <span class="var-chip-sm">使用场景</span>
+                  <span><div class="vc-input">选择投放渠道</div></span>
+                  <span><div class="vc-select">下拉选择 ▾</div></span>
+                  <span><div class="vc-input">小红书推广帖</div></span>
+                  <span><div class="vc-toggle on">●</div></span>
+                  <span class="vc-del">🗑</span>
+                </div>
+                <div class="var-config-row">
+                  <span class="var-chip-sm">目标受众</span>
+                  <span><div class="vc-input">描述目标用户群体</div></span>
+                  <span><div class="vc-select">多行文本 ▾</div></span>
+                  <span><div class="vc-input">—</div></span>
+                  <span><div class="vc-toggle off">○</div></span>
+                  <span class="vc-del">🗑</span>
+                </div>
+                <div class="var-add-row">＋ 手动新增变量</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <div class="modal-footer-left">
+              <span style="font-size:12px;color:#aaa">上次修改：2025-06-10 14:32</span>
+            </div>
+            <div class="modal-footer-right">
+              <button class="mfbtn-cancel">取消</button>
+              <button class="mfbtn-use">保存更新</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3>8.2 字段规格说明</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>区域</th><th>字段</th><th>类型</th><th>说明</th></tr></thead>
+          <tbody>
+            <tr><td rowspan="4" style="font-weight:700;color:var(--gold);vertical-align:middle">基本信息区</td><td>提示词标题</td><td>单行文本输入</td><td>必填，建议限制在 30 字以内，用于卡片标题展示。</td></tr>
+            <tr><td>所属分类</td><td>下拉选择</td><td>必填，选择已有分类，或选择「创建新分类」进入分类管理。</td></tr>
+            <tr><td>适用平台</td><td>多选标签</td><td>点击切换勾选状态，支持多选，决定卡片展示的平台图标与使用时的跳转选项。</td></tr>
+            <tr><td>描述</td><td>多行文本输入</td><td>选填，建议 1-3 行，说明提示词用途与适用场景。</td></tr>
+            <tr><td rowspan="2" style="font-weight:700;color:var(--gold);vertical-align:middle">正文编辑区</td><td>提示词正文</td><td>富文本编辑器</td><td>支持直接输入 <code>{{变量名}}</code> 创建变量占位符，编辑器自动高亮识别。</td></tr>
+            <tr><td>插入变量工具栏</td><td>操作按钮组</td><td>「插入变量」弹出快速填写变量名；「复制正文」一键复制原始模板文本；实时显示已识别变量数量。</td></tr>
+            <tr><td rowspan="5" style="font-weight:700;color:var(--gold);vertical-align:middle">变量配置区</td><td>变量名</td><td>只读标签</td><td>从正文占位符自动解析，不可单独修改（需在正文中修改占位符）。</td></tr>
+            <tr><td>说明/提示文字</td><td>单行文本输入</td><td>填写后在使用弹窗中作为该变量的输入提示展示给用户。</td></tr>
+            <tr><td>变量类型</td><td>下拉选择</td><td>支持：单行文本、多行文本、下拉选择、单选、多选、数字输入、日期选择。</td></tr>
+            <tr><td>默认值</td><td>对应类型控件</td><td>可选，预填内容，用户在使用弹窗中可覆盖。</td></tr>
+            <tr><td>是否必填</td><td>开关切换</td><td>开启后使用弹窗中该变量为必填，未填写时阻止提交。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>8.3 交互细节说明</h3>
+      <ul class="bullet-list">
+        <li>正文编辑区与变量配置区双向联动：在正文中新增 <code>{{变量名}}</code> 后，变量配置表格自动追加对应行；删除正文中的占位符，对应配置行也自动移除（二次确认提示）。</li>
+        <li>变量配置行支持拖拽排序，决定使用弹窗中变量的展示顺序。</li>
+        <li>保存时后端进行变量一致性校验：正文中存在的变量必须在配置表中完整配置，否则提示并阻止保存。</li>
+        <li>弹窗宽度建议 800px，正文编辑区高度可拖拽调整，变量配置区超过 5 条后出现内部滚动。</li>
+        <li>保存成功后弹窗关闭，首页对应卡片标题、描述、平台图标同步刷新，无需整页刷新。</li>
+      </ul>
+    </section>
+
+    <!-- 九 -->
+    <section id="s9">
+      <div class="section-header">
+        <span class="section-num">09</span>
+        <h2 class="section-title">新增提示词流程</h2>
+      </div>
+      <p>新增提示词按钮位于右上角，是创建新模板的主要入口。新增弹窗与编辑弹窗共用同一套组件，区别在于：新增时所有字段为空，标题为「新增提示词」，底部按钮文案为「保存并创建」。</p>
+
+      <h3>9.1 新增与编辑弹窗差异对比</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>维度</th><th>新增弹窗</th><th>编辑弹窗</th></tr></thead>
+          <tbody>
+            <tr><td>弹窗标题</td><td>新增提示词</td><td>编辑提示词</td></tr>
+            <tr><td>字段初始状态</td><td>全部为空（或系统提供的占位提示）</td><td>回填当前提示词已有内容</td></tr>
+            <tr><td>变量配置区</td><td>空表格，待用户在正文中创建占位符后自动识别</td><td>已有变量配置，可直接修改</td></tr>
+            <tr><td>底部按钮</td><td>「取消」+「保存并创建」</td><td>「取消」+「保存更新」</td></tr>
+            <tr><td>底部辅助信息</td><td>无</td><td>展示「上次修改时间」</td></tr>
+            <tr><td>保存后行为</td><td>新卡片插入对应分类，定位至该卡片</td><td>原卡片内容刷新更新</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>9.2 新增流程步骤</h3>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-content">点击右上角「＋ 新增提示词」按钮，打开新增弹窗。</div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-content">填写标题、选择分类、选择适用平台（必填项）。</div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-content">在正文编辑区输入提示词模板，在需要变量的位置插入 <code>{{变量名}}</code>。</div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-content">系统自动识别正文中的变量占位符，在变量配置区生成对应行。</div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-content">逐一完善每个变量的说明、类型、默认值与是否必填。</div></div>
+        <div class="step"><div class="step-num">6</div><div class="step-content">点击「保存并创建」，新提示词卡片自动出现在对应分类下。</div></div>
+      </div>
+
+      <div class="info-box" style="margin-top:24px">
+        <div class="info-box-label">设计说明</div>
+        <div class="info-box-body">新增与编辑共用一套弹窗组件，可降低开发与维护成本；同时两者界面保持一致，用户无需重新学习，直接降低上手门槛。</div>
+      </div>
+
+      <style>
+        /* ── Modal Prototype Styles ── */
+        .modal-proto-wrap {
+          background: #e8edf5;
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 24px;
+          margin: 20px 0 28px;
+          position: relative;
+        }
+        .modal-overlay-label {
+          text-align: center;
+          font-size: 11px;
+          color: #aaa;
+          letter-spacing: .06em;
+          margin-bottom: 16px;
+        }
+        .modal-box {
+          background: #fff;
+          border-radius: 12px;
+          box-shadow: 0 8px 40px rgba(0,0,0,.15);
+          overflow: hidden;
+          font-size: 13px;
+        }
+        .modal-header {
+          display: flex; align-items: flex-start; justify-content: space-between;
+          padding: 18px 24px 14px;
+          border-bottom: 1px solid var(--border);
+          background: #fafbff;
+        }
+        .modal-header-left { display: flex; flex-direction: column; gap: 8px; }
+        .modal-title { font-size: 17px; font-weight: 700; color: var(--text); }
+        .modal-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+        .modal-badge { font-size: 10px; padding: 2px 9px; border-radius: 10px; font-weight: 600; }
+        .modal-badge.tag { background: var(--accent-light); color: var(--gold); }
+        .modal-badge.platform.gpt { background: #e7f5ee; color: #1a7a45; }
+        .modal-badge.platform.claude { background: #e8f0fb; color: #1a5caa; }
+        .modal-badge.active-platform { outline: 2px solid currentColor; }
+        .modal-close { font-size: 18px; color: #bbb; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+        /* Use modal body */
+        .modal-body { display: flex; min-height: 320px; }
+        .modal-col-left {
+          flex: 1.1; padding: 20px 20px 20px 24px;
+          border-right: 1px solid var(--border);
+          background: #fafbff;
+        }
+        .modal-col-right {
+          flex: 1; padding: 20px 24px 20px 20px;
+          display: flex; flex-direction: column; gap: 0;
+        }
+        .modal-col-title {
+          font-size: 12px; font-weight: 700; color: var(--gold);
+          letter-spacing: .04em; margin-bottom: 14px;
+          text-transform: uppercase;
+        }
+        .modal-desc-block { background: var(--accent-light); border-radius: 6px; padding: 10px 12px; }
+        .modal-field-label { font-size: 11px; font-weight: 700; color: #888; letter-spacing: .06em; margin-bottom: 6px; text-transform: uppercase; }
+        .modal-desc-text { font-size: 12.5px; color: var(--text); line-height: 1.65; }
+        .modal-content-preview {
+          background: #f5f7fa; border: 1px solid var(--border);
+          border-radius: 6px; padding: 12px 14px;
+          font-size: 12.5px; color: var(--text-muted); line-height: 1.8;
+          font-family: 'Noto Sans SC', sans-serif;
+          white-space: pre-wrap; margin-top: 6px;
+        }
+        .var-chip {
+          display: inline-block;
+          background: #fff3cd; color: #8a6200;
+          border: 1px solid #f0c04080;
+          border-radius: 4px; padding: 1px 6px;
+          font-size: 11.5px; font-weight: 600;
+          font-family: 'JetBrains Mono', monospace;
+        }
+        .modal-var-list { display: flex; flex-direction: column; gap: 14px; flex: 1; }
+        .modal-var-item {}
+        .modal-var-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+        .modal-var-hint { font-size: 11px; color: #aaa; margin-bottom: 6px; }
+        .required { color: #e04040; font-size: 13px; }
+        .modal-input {
+          border: 1px solid var(--border); border-radius: 6px;
+          padding: 8px 12px; font-size: 13px; color: var(--text-muted);
+          background: #fafbff;
+        }
+        .modal-input-multi { min-height: 56px; }
+        .modal-select {
+          border: 1px solid var(--border); border-radius: 6px;
+          padding: 8px 12px; font-size: 13px; color: var(--text-muted);
+          background: #fafbff; display: flex; justify-content: space-between;
+        }
+        .select-arrow { color: #aaa; }
+        .modal-var-tip {
+          font-size: 11px; color: #aaa; margin-top: 14px;
+          padding-top: 10px; border-top: 1px dashed var(--border);
+        }
+        /* Footer */
+        .modal-footer {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 14px 24px;
+          border-top: 1px solid var(--border);
+          background: #fafbff;
+        }
+        .modal-footer-left { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #888; }
+        .modal-footer-info { color: #aaa; }
+        .modal-footer-right { display: flex; gap: 10px; }
+        .mfbtn-cancel {
+          background: #f0f0f0; color: var(--text-muted); border: none;
+          padding: 9px 20px; border-radius: 6px; font-size: 13px;
+          font-weight: 600; cursor: pointer;
+        }
+        .mfbtn-use {
+          background: var(--primary); color: #000; border: none;
+          padding: 9px 22px; border-radius: 6px; font-size: 13px;
+          font-weight: 700; cursor: pointer;
+          box-shadow: 0 2px 8px rgba(26,92,170,.3);
+        }
+
+        /* ── Edit Modal ── */
+        .modal-box-edit {}
+        .modal-edit-body { padding: 0 24px; max-height: 480px; overflow-y: auto; }
+        .edit-section {
+          padding: 18px 0;
+          border-bottom: 1px solid var(--border);
+        }
+        .edit-section:last-child { border-bottom: none; }
+        .edit-section-title {
+          font-size: 13px; font-weight: 700; color: var(--gold);
+          margin-bottom: 14px; display: flex; align-items: center; gap: 10px;
+        }
+        .edit-section-tip {
+          font-size: 11px; color: #aaa; font-weight: 400;
+        }
+        .edit-row { margin-bottom: 12px; }
+        .edit-row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .edit-field { display: flex; flex-direction: column; gap: 5px; }
+        .edit-label { font-size: 12px; font-weight: 600; color: var(--text-dim); }
+        .edit-input-box, .edit-textarea-box, .edit-select-box {
+          border: 1px solid var(--border); border-radius: 6px;
+          padding: 8px 12px; font-size: 13px; color: var(--text-muted);
+          background: #fafbff; line-height: 1.6;
+        }
+        .edit-select-box { display: flex; justify-content: space-between; }
+        .edit-textarea-box { display: flex; align-items: flex-start; }
+        .edit-platform-pick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+        .ep-chip {
+          font-size: 12px; padding: 5px 12px; border-radius: 20px;
+          border: 1px solid var(--border); color: #888; cursor: pointer;
+          font-weight: 500;
+        }
+        .ep-active { background: var(--accent-light); color: var(--gold); border-color: var(--gold); font-weight: 700; }
+        .ep-add { border-style: dashed; color: var(--gold); }
+        .edit-prompt-area {
+          border: 1px solid var(--accent); border-radius: 6px;
+          padding: 12px 14px; font-size: 13px; color: var(--text-muted);
+          line-height: 1.85; background: #fafbff;
+          white-space: pre-wrap; min-height: 100px;
+          font-family: 'Noto Sans SC', sans-serif;
+        }
+        .cursor-blink {
+          display: inline-block;
+          animation: blink 1s step-end infinite;
+          color: var(--gold); font-weight: 700;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        .edit-prompt-toolbar {
+          display: flex; align-items: center; gap: 10px;
+          margin-top: 8px; flex-wrap: wrap;
+        }
+        .toolbar-btn {
+          font-size: 12px; padding: 4px 12px; border-radius: 5px;
+          background: var(--accent-light); color: var(--gold);
+          font-weight: 600; cursor: pointer;
+        }
+        .toolbar-divider { flex: 1; }
+        .toolbar-hint { font-size: 11px; color: #aaa; }
+        /* Variable config table */
+        .var-config-table { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .var-config-header, .var-config-row {
+          display: grid;
+          grid-template-columns: 110px 1fr 110px 110px 56px 32px;
+          gap: 8px; padding: 9px 12px; align-items: center;
+        }
+        .var-config-header {
+          background: var(--surface);
+          font-size: 11px; font-weight: 700; color: #888;
+          letter-spacing: .05em; border-bottom: 1px solid var(--border);
+        }
+        .var-config-row { border-bottom: 1px solid #f0f0f0; font-size: 12.5px; }
+        .var-config-row:last-child { border-bottom: none; }
+        .var-chip-sm {
+          display: inline-block; background: #fff3cd; color: #8a6200;
+          border: 1px solid #f0c04060; border-radius: 4px;
+          padding: 2px 8px; font-size: 11px; font-weight: 600;
+          font-family: 'JetBrains Mono', monospace;
+        }
+        .vc-input {
+          border: 1px solid var(--border); border-radius: 4px;
+          padding: 5px 8px; font-size: 11.5px; color: var(--text-muted);
+          background: #fafbff;
+        }
+        .vc-select {
+          border: 1px solid var(--border); border-radius: 4px;
+          padding: 5px 8px; font-size: 11.5px; color: var(--text-muted);
+          background: #fafbff; display: flex; justify-content: space-between;
+        }
+        .vc-toggle { font-size: 18px; text-align: center; }
+        .vc-toggle.on { color: var(--gold); }
+        .vc-toggle.off { color: #ccc; }
+        .vc-del { color: #ccc; cursor: pointer; text-align: center; font-size: 14px; }
+        .var-add-row {
+          padding: 10px 12px; font-size: 12px;
+          color: var(--gold); cursor: pointer;
+          border-top: 1px dashed var(--border);
+          font-weight: 600;
+        }
+
+        /* Platform choice group */
+        .platform-choice-group { display:flex; gap:10px; flex-wrap:wrap; }
+        .platform-choice {
+          display:flex; align-items:center; gap:6px;
+          padding:6px 12px 6px 8px;
+          border:1px solid var(--border); border-radius:8px;
+          cursor:pointer; background:#fafbff;
+          transition: border-color .2s, background .2s;
+        }
+        .active-platform-choice {
+          border-color: var(--gold);
+          background: var(--accent-light);
+          box-shadow: 0 0 0 2px rgba(46,125,224,.15);
+        }
+        .platform-method-tag {
+          font-size: 10px; padding: 2px 7px; border-radius: 10px;
+          font-weight: 600; white-space: nowrap;
+        }
+        .platform-method-tag.url { background:#e7f5ee; color:#1a7a45; }
+        .platform-method-tag.clipboard { background:#fff3e0; color:#b06000; }
+
+        /* Countdown hint */
+        .countdown-hint {
+          font-size: 12px; color: #1a7a45;
+          background: #e7f5ee; border: 1px solid #b7dfcb;
+          border-radius: 6px; padding: 7px 14px;
+          display: flex; align-items: center; gap: 6px;
+          flex: 1; margin-right: 14px;
+        }
+        .countdown-icon { font-size: 14px; }
+      </style>
+
+    <!-- 十 -->
+    <section id="s10">
+      <div class="section-header">
+        <span class="section-num">10</span>
+        <h2 class="section-title">核心交互闭环</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>操作场景</th><th>交互步骤</th></tr></thead>
+          <tbody>
+            <tr><td>浏览</td><td>进入首页 → 搜索或选择分类 → 查看提示词卡片</td></tr>
+            <tr><td>使用</td><td>点击使用 → 打开使用弹窗 → 补充变量 → 点击最终使用 → 跳转到目标平台</td></tr>
+            <tr><td>编辑</td><td>点击编辑 → 修改字段与变量 → 保存更新</td></tr>
+            <tr><td>新增</td><td>点击新增提示词 → 填写模板信息 → 保存生成卡片</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 十一 -->
+    <section id="s11">
+      <div class="section-header">
+        <span class="section-num">11</span>
+        <h2 class="section-title">一期版本建议范围</h2>
+      </div>
+      <div class="phase-section">
+        <div class="phase-label phase-p1"><span class="phase-dot"></span>优先建设（一期）</div>
+        <ul class="bullet-list">
+          <li>首页基础布局</li>
+          <li>搜索功能</li>
+          <li>左侧分类导航</li>
+          <li>提示词卡片展示</li>
+          <li>使用弹窗（含变量填写）</li>
+          <li>编辑弹窗</li>
+          <li>新增提示词功能</li>
+          <li>AI 平台展示与跳转</li>
+        </ul>
+      </div>
+      <div class="phase-section" style="margin-top:24px;">
+        <div class="phase-label phase-p2"><span class="phase-dot"></span>后续迭代（二期+）</div>
+        <ul class="bullet-list">
+          <li>标签系统</li>
+          <li>收藏功能</li>
+          <li>最近使用记录</li>
+          <li>使用次数统计</li>
+          <li>多人共享与权限管理</li>
+          <li>提示词版本管理</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 十二 -->
+    <section id="s12">
+      <div class="section-header">
+        <span class="section-num">12</span>
+        <h2 class="section-title">结论</h2>
+      </div>
+      <div class="conclusion">
+        <p>本方案以「搜索 + 分类 + 卡片 + 弹窗确认使用」为核心设计结构，重点解决提示词查找效率与变量场景下的安全使用问题。</p>
+        <p>其中最关键的设计调整是：将原先简单的复制逻辑改为<strong>「使用」流程</strong>，并在正式跳转到 AI 平台前，通过弹窗补全信息与变量。这一设计更适合真实业务中的提示词模板管理场景。</p>
+      </div>
+      <div class="info-box" style="margin-top:28px;">
+        <div class="info-box-label">设计重点</div>
+        <div class="info-box-body">核心创新在于将「一键复制」升级为「确认并执行」流程，有效规避变量遗漏风险，同时保持整体操作的流畅与高效。</div>
+      </div>
+    </section>
+    </div>
+  </main>
+</div>
+
+<script>
+  document.getElementById('docDate').textContent =
+    new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        e.target.querySelectorAll('.step').forEach((s, i) => {
+          setTimeout(() => s.classList.add('visible'), i * 80);
+        });
+      }
+    });
+  }, { threshold: 0.06 });
+  document.querySelectorAll('section').forEach(s => obs.observe(s));
+
+  const navLinks = document.querySelectorAll('.nav-item');
+  const sectionEls = document.querySelectorAll('section, .cover');
+  const navObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        navLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + id));
+      }
+    });
+  }, { threshold: 0.25 });
+  sectionEls.forEach(s => navObs.observe(s));
+</script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+- [PromptCubby Project](project_promptcubby.md) — Full-stack Next.js+SQLite prompt manager: schema, API routes, components, platform delivery logic
