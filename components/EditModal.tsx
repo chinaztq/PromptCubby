@@ -61,6 +61,7 @@ export default function EditModal({ prompt, categories, allPlatforms, onClose, o
   const [catRect, setCatRect] = useState<DOMRect | null>(null);
   const catRef = useRef<HTMLDivElement>(null);
   const catBtnRef = useRef<HTMLButtonElement>(null);
+  const catDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const names = extractVars(content);
@@ -73,7 +74,9 @@ export default function EditModal({ prompt, categories, allPlatforms, onClose, o
   useEffect(() => {
     if (!catOpen) return;
     function handleClick(e: MouseEvent) {
-      if (catRef.current && !catRef.current.contains(e.target as Node)) setCatOpen(false);
+      const inTrigger  = catRef.current?.contains(e.target as Node);
+      const inDropdown = catDropdownRef.current?.contains(e.target as Node);
+      if (!inTrigger && !inDropdown) setCatOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -308,6 +311,7 @@ export default function EditModal({ prompt, categories, allPlatforms, onClose, o
                   </button>
                   {catOpen && catRect && typeof document !== "undefined" && createPortal(
                     <div
+                      ref={catDropdownRef}
                       className="rounded-lg overflow-hidden py-1"
                       style={{
                         position: "fixed",
