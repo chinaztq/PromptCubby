@@ -76,6 +76,7 @@ export default function UseModal({ prompt, onClose }: Props) {
   }
 
   async function handleSubmitWithPlatform(p: Platform) {
+    if (p.slug === 'comet') return;
     if (!validate()) return;
     setPlatform(p);
     const content = buildContent();
@@ -258,8 +259,8 @@ export default function UseModal({ prompt, onClose }: Props) {
                     <button
                       key={p.id}
                       onClick={() => handleSubmitWithPlatform(p)}
-                      disabled={isCounting}
-                      className="flex flex-col items-center gap-2 cursor-pointer group"
+                      disabled={isCounting || p.slug === 'comet'}
+                      className={`flex flex-col items-center gap-2 group ${p.slug === 'comet' ? 'cursor-default opacity-40' : 'cursor-pointer'}`}
                       style={{ background: "none", border: "none", padding: 0 }}
                     >
                       <div
